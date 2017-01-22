@@ -2,6 +2,7 @@
 import SocketServer
 import os.path
 import mimetypes
+import socket
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,71 +33,62 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
+        #print ("Got a request of: %s\n" % self.data)
 
         #self.request.sendall("OK")
 
 
         #Only Handle GET Request. If not a GET return 405
         if self.data.split(' ')[0] != "GET":
-            self.request.sendall("\\\nHTTP/1.1 405 Method Not Allowed\n\r405 Method Not Allowed\n")
-            print("405 Method Not Allowed\n")
+            self.request.send("HTTP/1.1 405 Method Not Allowed\r\n")
+            self.request.send("Connection: close\r\n\r\n")
+            self.request.send("<html><body><h1>405 Method Not Allowed</body></html>")
             return
      
         page = self.data.split(' ')[1]
 
-        if page == '/':
-            page = "/index.html"
+        #if page == '/':
+        #    page = "/index.html"
 
-        #fullname = os.path.join(path, )deep/index.html
+        if(page[-1] == '/'):
+            page = page + "index.html"
 
-        print "www" + page
+        #print "going to www" + page
+
+        page = page.split('../')
+
+        page = "".join(page)
+
+        #print "after split going to www" + page
 
         try:
             mimetypes.init()
             f = open("www" + page, 'rb')
         
         except IOError:
-            self.request.sendall("\\\nHTTP/1.1 404 Not Found\n\r")
-            self.request.sendall("404 page not found\n")
-            print "page not found"
-            return
 
-        #http_response = """\
-        #HTTP/1,1 200 OK\n\
-        #self.request.sendall("\\\nHTTP/1.1 200 OK\n\r")
+            self.request.send("HTTP/1.1 404 Not Found\r\n")
+            self.request.send("Connection: close\r\n\r\n")
+
+            self.request.sendall('<html><body><h1>404 File Not Found</body></html>')
+            #self.request.sendall("404 page not found\n")
+            return
 
         #stack overflow https://stackoverflow.com/questions/947372/custom-simple-python-http-server-not-serving-css-files/947592
         mimetype, _ = mimetypes.guess_type("www" + page)
 
-        self.request.sendall("\\\nHTTP/1.1 200 OK\nContent-type: " + mimetype + "\n")
+        if mimetype == None:
+            return
+
+        self.request.send("HTTP/1.1 200 OK\r\n")
+        self.request.send("Content-type: " + mimetype + "\r\n")
 
         fs = os.fstat(f.fileno())
 
-        self.request.sendall("Content-Length: " + str(fs[6]) + "\r\n\r\n")
+        self.request.send("Content-Length: " + str(fs[6]) + "\r\n\r\n")
 
         self.request.sendall(f.read())
 
-
-'''
-        self.do_GET()
-
-    def do_GET(self):
-        print "doing a get"
-        path = self.translate_path(self.path)
-'''
-
-'''
-    if not mimetypes.inited:
-        mimetypes.init() # try to read system mime.types
-    extensions_map = mimetypes.types_map.copy()
-    extensions_map.update({
-        '': 'application/octet-stream', # Default
-        '.py': 'text/plain',
-        '.c': 'text/plain',
-        '.h': 'text/plain',
-    })
-'''
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
@@ -104,6 +96,8 @@ if __name__ == "__main__":
     SocketServer.TCPServer.allow_reuse_address = True
     # Create the server, binding to localhost on port 8080
     server = SocketServer.TCPServer((HOST, PORT), MyWebServer)
+
+    
 
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
