@@ -3,7 +3,7 @@ import SocketServer
 import os.path
 import mimetypes
 import socket
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+# Copyright 2017 github.com/Joduro
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ import socket
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# Created using skeleton code provided by Abram Hindle and Eddie Antonio Santos
 #
 # Furthermore it is derived from the Python documentation examples thus
 # some of the code is Copyright © 2001-2013 Python Software
@@ -73,7 +74,10 @@ class MyWebServer(SocketServer.BaseRequestHandler):
             #self.request.sendall("404 page not found\n")
             return
 
-        #stack overflow https://stackoverflow.com/questions/947372/custom-simple-python-http-server-not-serving-css-files/947592
+        #the following line was created by using code written by nosklo 
+        #(https://stackoverflow.com/users/17160/nosklo) on stack overflow 
+        #(https://stackoverflow.com/questions/947372/custom-simple-python-http-server-not-serving-css-files/947592) 
+        #Jan 2017
         mimetype, _ = mimetypes.guess_type("www" + page)
 
         if mimetype == None:
@@ -96,8 +100,7 @@ if __name__ == "__main__":
     # Create the server, binding to localhost on port 8080
     server = SocketServer.TCPServer((HOST, PORT), MyWebServer)
 
-    
-
+   
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
     server.serve_forever()
