@@ -62,7 +62,6 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         #print "after split going to www" + page
 
         try:
-            mimetypes.init()
             f = open("www" + page, 'rb')
         
         except IOError:
